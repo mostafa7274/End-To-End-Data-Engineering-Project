@@ -27,7 +27,6 @@ The pipeline follows the **Medallion Architecture**:
 * Amazon S3
 * Lakehouse Architecture
 * BI Dashboard (for visualization)
-* Genie (for data interaction)
 
 ---
 
