@@ -1,63 +1,109 @@
-# FMCG Data Engineering Pipeline (Lakehouse Architecture)
+# FMCG Data Engineering Pipeline — Lakehouse Architecture on Databricks
 
 ## Overview
 
-This project is an end-to-end data engineering pipeline built on Databricks, simulating a real-world FMCG use case where a large retail company acquires a smaller one.
+This project simulates a real-world scenario in the FMCG (Fast-Moving Consumer Goods) industry: a large retail company acquires a smaller competitor and needs to consolidate data from both entities into a single, unified system.
 
-The goal is to consolidate data from both companies into a unified Lakehouse architecture, enabling consistent analytics and business insights.
+The goal was to build a production-style, end-to-end ETL pipeline that ingests raw data from both companies, resolves inconsistencies, and delivers clean, analytics-ready datasets — all on a Lakehouse architecture using Databricks and Amazon S3.
+
+This project was built as part of the Codebasics Data Engineering course by Dhaval Patel.
 
 ---
 
 ## Architecture
 
-The pipeline follows the **Medallion Architecture**:
+The pipeline is structured around the **Medallion Architecture**, a layered approach that separates raw data from clean data from business-ready data:
 
-* **Bronze Layer** → Raw ingestion from multiple sources
-* **Silver Layer** → Data cleaning, validation, and transformation
-* **Gold Layer** → Aggregated, business-ready datasets for analytics
+```
+Amazon S3 (Raw Storage)
+        │
+        ▼
+┌───────────────┐
+│  Bronze Layer │  ← Raw ingestion, no transformation
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│  Silver Layer │  ← Cleaning, schema standardization, deduplication
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│   Gold Layer  │  ← Aggregated, business-ready tables
+└───────┬───────┘
+        │
+        ▼
+  Databricks Dashboards (BI & Reporting)
+```
+
+### Layer Breakdown
+
+**Bronze — Raw Ingestion**
+Raw data from both companies is landed into Amazon S3 and ingested into the Bronze layer as-is, preserving the original state for auditability and reprocessing.
+
+**Silver — Transformation & Standardization**
+Data is cleaned, validated, and standardized at this layer. This includes resolving schema mismatches between the two companies (e.g., different customer ID formats, inconsistent date formats, duplicate records).
+
+**Gold — Analytics-Ready**
+Aggregated and enriched datasets are produced here, optimized for reporting. These tables feed directly into the Databricks dashboards.
 
 ---
 
 ## Tech Stack
 
-* Python
-* SQL
-* Apache Spark
-* Databricks
-* Amazon S3
-* Lakehouse Architecture
-* BI Dashboard (for visualization)
+| Tool / Technology       | Purpose                                      |
+|-------------------------|----------------------------------------------|
+| Databricks              | Processing, orchestration, and dashboards    |
+| Apache Spark            | Distributed data transformation              |
+| Amazon S3               | Raw and processed data storage               |
+| Python                  | Pipeline logic and transformations           |
+| SQL                     | Data querying and aggregation                |
+| Databricks Jobs & Workflows | Pipeline scheduling and orchestration   |
+| Medallion Architecture  | Layered data organization pattern            |
 
 ---
 
 ## Pipeline Workflow
 
-1. Ingest raw data from both companies into the Bronze layer
-2. Clean and standardize schemas in the Silver layer
-3. Resolve data inconsistencies (e.g., customer IDs, formats)
-4. Build unified, analytics-ready tables in the Gold layer
-5. Serve data to BI dashboards for reporting and insights
+1. Raw data from both companies is uploaded to Amazon S3
+2. Databricks ingests the raw files into the Bronze Delta tables
+3. Spark jobs clean and standardize the data into the Silver layer
+4. Business logic is applied to produce unified Gold tables
+5. Databricks dashboards connect to the Gold layer for reporting
+6. The entire pipeline runs on a scheduled Databricks Workflow
 
 ---
 
-##  Key Features
+## Getting Started
 
-* Data consolidation from multiple sources
-* Schema standardization and data quality handling
-* Scalable ETL pipeline using Spark
-* Layered architecture for maintainability
-* Real-world business use case simulation
+### Prerequisites
+
+- A Databricks workspace (Community Edition works for exploration)
+- An Amazon S3 bucket with appropriate IAM permissions
+- The raw dataset files loaded into S3
+
+### Steps
+
+1. Clone this repository
+2. Import the notebooks into your Databricks workspace
+3. Configure your S3 connection in the Databricks cluster settings (or via a mounted storage path)
+4. Run the notebooks in order: Bronze → Silver → Gold
+5. Set up a Databricks Workflow to automate the pipeline on a schedule
+6. Connect the Databricks dashboard to the Gold layer tables
 
 ---
 
-## Use Case
+## Business Use Case
 
-This pipeline enables the retail company to:
+This pipeline enables the acquiring retail company to:
 
-* Get a unified view of customers and sales
-* Analyze performance across merged entities
-* Support decision-making with clean, reliable data
+- Get a unified, consistent view of customers, sales, and inventory across both companies
+- Identify data quality issues introduced by the acquisition early in the pipeline
+- Support finance, operations, and leadership with reliable, up-to-date reporting
+- Scale the pipeline as more data sources are added post-acquisition
 
 ---
 
+## Acknowledgements
 
+Built as part of the [Codebasics Data Engineering course](https://codebasics.io) by Dhaval Patel.
