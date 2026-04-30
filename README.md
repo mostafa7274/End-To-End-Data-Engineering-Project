@@ -60,10 +60,4 @@ This pipeline enables the retail company to:
 
 ---
 
-##  Future Improvements
 
-* Add streaming pipeline with Kafka
-* Implement data quality checks (Great Expectations)
-* Automate workflows using Apache Airflow
-
----
