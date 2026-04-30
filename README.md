@@ -12,40 +12,54 @@ This project was built as part of the Codebasics Data Engineering course by Dhav
 
 ## Architecture
 
-The pipeline is structured around the **Medallion Architecture**, a layered approach that separates raw data from clean data from business-ready data:
+![Project Architecture](Project_Architecture.png)
+
+The pipeline is structured around the **Medallion Architecture** and follows a two-company consolidation design.
+
+The child company runs a full, self-contained pipeline: raw data is ingested from Amazon S3 into a Bronze layer, transformed through a Silver layer, and aggregated into its own Gold layer. That Gold layer is then merged into the parent company's Gold layer, which is managed under **Unity Catalog**. The unified Gold layer is what powers the Databricks dashboards.
+
+Orchestration across the entire flow is handled by **Lakeflow Jobs**.
 
 ```
-Amazon S3 (Raw Storage)
-        │
-        ▼
-┌───────────────┐
-│  Bronze Layer │  ← Raw ingestion, no transformation
-└───────┬───────┘
-        │
-        ▼
-┌───────────────┐
-│  Silver Layer │  ← Cleaning, schema standardization, deduplication
-└───────┬───────┘
-        │
-        ▼
-┌───────────────┐
-│   Gold Layer  │  ← Aggregated, business-ready tables
-└───────┬───────┘
-        │
-        ▼
-  Databricks Dashboards (BI & Reporting)
+                        ┌─────────────────────────────────┐
+                        │         Parent Company           │
+                        │                                  │
+                        │   Unity Catalog                  │
+                        │        │                         │
+                        │        ▼                         │
+                        │   ┌─────────┐                   │
+                        │   │  Gold   │ ──► Dashboards     │
+                        │   └────▲────┘                   │
+                        │        │ Merge                   │
+                        └────────┼────────────────────────┘
+                                 │
+┌────────────────────────────────┼────────────────────────┐
+│  Child Company                 │                         │
+│                                │                         │
+│  S3 (Raw Data)                 │                         │
+│      │                         │                         │
+│      ▼                         │                         │
+│  Lakeflow Jobs                 │                         │
+│      │                         │                         │
+│      ▼        ▼        ▼       │                         │
+│  [Bronze] → [Silver] → [Gold] ─┘                         │
+│   Raw      Transform  Business                           │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Layer Breakdown
 
 **Bronze — Raw Ingestion**
-Raw data from both companies is landed into Amazon S3 and ingested into the Bronze layer as-is, preserving the original state for auditability and reprocessing.
+Raw data from the child company is landed into Amazon S3 and ingested into the Bronze layer as-is, preserving the original state for auditability and reprocessing.
 
 **Silver — Transformation & Standardization**
-Data is cleaned, validated, and standardized at this layer. This includes resolving schema mismatches between the two companies (e.g., different customer ID formats, inconsistent date formats, duplicate records).
+Data is cleaned, validated, and standardized at this layer. This includes resolving schema differences, inconsistent formats, and duplicate records introduced by operating as a separate company.
 
-**Gold — Analytics-Ready**
-Aggregated and enriched datasets are produced here, optimized for reporting. These tables feed directly into the Databricks dashboards.
+**Gold (Child) — Business-Ready**
+Aggregated and enriched datasets are produced for the child company's data, structured to be compatible with the parent company's schema.
+
+**Gold (Parent) — Unified Analytics Layer**
+The child company's Gold data is merged into the parent company's Gold layer, managed via Unity Catalog. This unified layer is the single source of truth for all reporting and dashboards.
 
 ---
 
@@ -56,9 +70,10 @@ Aggregated and enriched datasets are produced here, optimized for reporting. The
 | Databricks              | Processing, orchestration, and dashboards    |
 | Apache Spark            | Distributed data transformation              |
 | Amazon S3               | Raw and processed data storage               |
+| Unity Catalog           | Data governance and catalog for parent company|
+| Lakeflow Jobs           | Pipeline scheduling and orchestration        |
 | Python                  | Pipeline logic and transformations           |
 | SQL                     | Data querying and aggregation                |
-| Databricks Jobs & Workflows | Pipeline scheduling and orchestration   |
 | Medallion Architecture  | Layered data organization pattern            |
 
 ---
@@ -73,6 +88,7 @@ Aggregated and enriched datasets are produced here, optimized for reporting. The
 6. The entire pipeline runs on a scheduled Databricks Workflow
 
 ---
+
 
 ## Getting Started
 
