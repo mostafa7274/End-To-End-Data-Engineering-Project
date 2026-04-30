@@ -12,7 +12,7 @@ This project was built as part of the Codebasics Data Engineering course by Dhav
 
 ## Architecture
 
-![Project Architecture](Project Architecture.png)
+![Project Architecture](Project_Architecture.png)
 
 The pipeline is structured around the **Medallion Architecture** and follows a two-company consolidation design.
 
